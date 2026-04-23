@@ -1,0 +1,28 @@
+# Dépendances
+node_modules/
+
+# Vidéos et audios générés
+public/videos/
+public/audio/
+
+# Variables d'environnement
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Remotion (bundle temporaire)
+.remotion/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
