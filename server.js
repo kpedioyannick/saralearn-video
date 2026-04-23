@@ -108,6 +108,9 @@ async function renderJob(jobId, payload) {
   job.updatedAt = nowIso();
 
   try {
+    if (!bundleCache) {
+      throw new Error("Le serveur est encore en cours d initialisation, reessaie dans quelques secondes.");
+    }
     await ensureOutputDir();
     const slidesWithAudio = await buildSlidesWithAudio(jobId, payload);
 
@@ -118,11 +121,6 @@ async function renderJob(jobId, payload) {
       ? mp3Files[Math.floor(Math.random() * mp3Files.length)]
       : null;
     const backgroundMusicSrc = randomMp3 ? `${HOST}/son/${randomMp3}` : null;
-
-    const bundleLocation = await bundle({
-      entryPoint: REMOTION_ENTRY,
-      webpackOverride: (config) => config,
-    });
 
     const VALID_FORMATS = ["landscape", "portrait", "square"];
     const format = VALID_FORMATS.includes(payload.format) ? payload.format : "landscape";
@@ -136,7 +134,7 @@ async function renderJob(jobId, payload) {
     };
 
     const composition = await selectComposition({
-      serveUrl: bundleLocation,
+      serveUrl: bundleCache,
       id: "PedagogicalVideo",
       inputProps,
     });
@@ -146,7 +144,7 @@ async function renderJob(jobId, payload) {
 
     await renderMedia({
       composition,
-      serveUrl: bundleLocation,
+      serveUrl: bundleCache,
       codec: "h264",
       outputLocation,
       inputProps,
@@ -201,6 +199,14 @@ app.get("/api/videos/:id", (req, res) => {
   return res.json(job);
 });
 
-app.listen(PORT, () => {
+let bundleCache = null;
+
+app.listen(PORT, async () => {
   console.log(`API lancee sur ${HOST}`);
+  console.log("Bundling Remotion...");
+  bundleCache = await bundle({
+    entryPoint: REMOTION_ENTRY,
+    webpackOverride: (config) => config,
+  });
+  console.log("Bundle pret.");
 });
